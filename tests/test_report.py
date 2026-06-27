@@ -19,7 +19,15 @@ def test_build_payload_has_aggregate_and_urls():
     per_url, aggregate = _sample()
     payload = build_payload(per_url, aggregate)
     assert payload["aggregate"]["families"][0]["family"] == "Inter"
+    assert payload["aggregate"]["styles"][0]["family"] == "Inter"
     assert payload["urls"][0]["url"] == "http://x"
+
+
+def test_per_url_has_styles_not_families_and_uses_n_i():
+    per_url, _ = _sample()
+    d = per_url[0].to_dict()
+    assert "families" not in d  # per-URL reports surface styles only
+    assert d["styles"][0]["style"] == "n"
 
 
 def test_write_json_roundtrips(tmp_path):

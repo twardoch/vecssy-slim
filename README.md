@@ -63,30 +63,43 @@ You can provide `--url` and `--list_urls` together; URLs are de-duplicated in or
 
 ## Output
 
-Both reports contain an **aggregate** (all URLs combined) and a **per-URL** breakdown. Each breakdown lists families sorted by coverage descending, and within each family the per-style rows (weight / style / stretch), also sorted by coverage.
+Both reports have three parts, all sorted by coverage descending:
+
+1. **Per-URL styles** — for each URL, every rendered style (family / weight / style / stretch) ranked by coverage.
+2. **Aggregate styles** — the same styles summed across all URLs.
+3. **Aggregate families** — those styles rolled up per family, across all URLs.
+
+`font-style` is reported compactly as `n` (normal) or `i` (italic).
 
 JSON shape:
 
 ```json
 {
+  "urls": [
+    {
+      "url": "https://example.com",
+      "error": null,
+      "total_chars": 12345,
+      "total_coverage": 234567.0,
+      "styles": [
+        {"family": "Inter", "weight": "400", "style": "n",
+         "stretch": "100%", "chars": 6000, "coverage": 120000.0}
+      ]
+    }
+  ],
   "aggregate": {
     "url": "ALL URLS",
     "error": null,
     "total_chars": 12345,
     "total_coverage": 234567.0,
+    "styles": [
+      {"family": "Inter", "weight": "400", "style": "n",
+       "stretch": "100%", "chars": 6000, "coverage": 120000.0}
+    ],
     "families": [
-      {
-        "family": "Inter",
-        "chars": 8000,
-        "coverage": 180000.0,
-        "styles": [
-          {"family": "Inter", "weight": "400", "style": "normal",
-           "stretch": "100%", "chars": 6000, "coverage": 120000.0}
-        ]
-      }
+      {"family": "Inter", "chars": 8000, "coverage": 180000.0}
     ]
-  },
-  "urls": [ { "url": "https://example.com", "...": "..." } ]
+  }
 }
 ```
 

@@ -2,7 +2,14 @@
 """Tests for coverage aggregation, sorting, and report merging."""
 
 from vecssy_slim.aggregate import build_url_report, merge_reports
-from vecssy_slim.models import FontRecord, UrlReport
+from vecssy_slim.models import FontRecord, UrlReport, style_label
+
+
+def test_style_label_maps_to_n_and_i():
+    assert style_label("normal") == "n"
+    assert style_label("italic") == "i"
+    assert style_label("oblique 10deg") == "i"
+    assert style_label("") == "n"
 
 
 def test_coverage_is_chars_times_size():
@@ -25,11 +32,11 @@ def test_build_url_report_aggregates_per_style_and_family():
     assert fam.coverage == 160 + 80 + 128
 
     # Two distinct style groups (400 and 700), sorted by coverage desc.
-    assert len(fam.styles) == 2
-    assert fam.styles[0].coverage == 240  # the 400 group (160+80)
-    assert fam.styles[0].weight == "400"
-    assert fam.styles[0].chars == 15
-    assert fam.styles[1].coverage == 128
+    assert len(report.styles) == 2
+    assert report.styles[0].coverage == 240  # the 400 group (160+80)
+    assert report.styles[0].weight == "400"
+    assert report.styles[0].chars == 15
+    assert report.styles[1].coverage == 128
 
 
 def test_families_sorted_by_coverage_descending():
@@ -49,7 +56,7 @@ def test_stretch_and_style_are_distinct_keys():
     ]
     report = build_url_report("http://x", records)
     assert len(report.families) == 1
-    assert len(report.families[0].styles) == 3
+    assert len(report.styles) == 3
 
 
 def test_merge_reports_sums_across_urls_and_skips_errors():

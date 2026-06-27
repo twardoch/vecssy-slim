@@ -6,14 +6,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from vecssy_slim.models import UrlReport
+from vecssy_slim.models import UrlReport, style_label
 
 
 def build_payload(per_url: list[UrlReport], aggregate: UrlReport) -> dict:
-    """Assemble the full result document (used for the JSON report)."""
+    """Assemble the full result document (used for the JSON report).
+
+    Per-URL reports carry their `styles`; the aggregate also carries `families`.
+    """
     return {
-        "aggregate": aggregate.to_dict(),
         "urls": [r.to_dict() for r in per_url],
+        "aggregate": aggregate.to_dict(include_families=True),
     }
 
 
@@ -22,27 +25,40 @@ def write_json(path: str | Path, per_url: list[UrlReport], aggregate: UrlReport)
     Path(path).write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def _render_report(report: UrlReport, heading: str) -> list[str]:
-    lines = [f"## {heading}", ""]
-    if report.error:
-        lines += [f"> **Error:** {report.error}", ""]
-        return lines
-    lines += [
+def _totals(report: UrlReport) -> list[str]:
+    return [
         f"- Total rendered glyphs: **{report.total_chars:,}**",
         f"- Total coverage (glyphs x px): **{report.total_coverage:,.0f}**",
         "",
+    ]
+
+
+def _style_table(report: UrlReport) -> list[str]:
+    """A coverage-ranked table of (family, weight, style, stretch) rows."""
+    if report.error:
+        return [f"> **Error:** {report.error}", ""]
+    lines = _totals(report)
+    lines += [
         "| Family | Weight | Style | Stretch | Glyphs | Coverage |",
-        "| --- | ---: | --- | --- | ---: | ---: |",
+        "| --- | ---: | :-: | --- | ---: | ---: |",
+    ]
+    for st in report.styles:
+        lines.append(
+            f"| {st.family} | {st.weight} | {style_label(st.style)} | {st.stretch} "
+            f"| {st.chars:,} | {st.coverage:,.0f} |"
+        )
+    lines.append("")
+    return lines
+
+
+def _family_table(report: UrlReport) -> list[str]:
+    """A coverage-ranked table of families (styles summed)."""
+    lines = [
+        "| Family | Glyphs | Coverage |",
+        "| --- | ---: | ---: |",
     ]
     for fam in report.families:
-        lines.append(
-            f"| **{fam.family}** | | | | **{fam.chars:,}** | **{fam.coverage:,.0f}** |"
-        )
-        for st in fam.styles:
-            lines.append(
-                f"| {st.family} | {st.weight} | {st.style} | {st.stretch} "
-                f"| {st.chars:,} | {st.coverage:,.0f} |"
-            )
+        lines.append(f"| {fam.family} | {fam.chars:,} | {fam.coverage:,.0f} |")
     lines.append("")
     return lines
 
@@ -53,12 +69,21 @@ def render_markdown(per_url: list[UrlReport], aggregate: UrlReport) -> str:
         "",
         "_Coverage = rendered glyphs x font-size (px), summed per font. "
         "Higher coverage means the font occupies more visual area; low-coverage "
-        "`@font-face` declarations are candidates for removal or subsetting._",
+        "`@font-face` declarations are candidates for removal or subsetting. "
+        "Style is `n` (normal) or `i` (italic)._",
         "",
     ]
-    lines += _render_report(aggregate, f"Aggregate ({len(per_url)} URL(s))")
+    n = len(per_url)
     for report in per_url:
-        lines += _render_report(report, report.url)
+        lines.append(f"## {report.url}")
+        lines.append("")
+        lines += _style_table(report)
+    lines.append(f"## Aggregate — styles ({n} URL(s))")
+    lines.append("")
+    lines += _style_table(aggregate)
+    lines.append(f"## Aggregate — families ({n} URL(s))")
+    lines.append("")
+    lines += _family_table(aggregate)
     return "\n".join(lines)
 
 

@@ -19,22 +19,28 @@ _StyleKey = tuple[str, str, str, str]
 
 
 def _assemble(url: str, acc: dict[_StyleKey, list]) -> UrlReport:
-    """Turn a {style_key: [chars, coverage]} accumulator into a sorted report."""
+    """Turn a {style_key: [chars, coverage]} accumulator into a sorted report.
+
+    Produces a flat `styles` list and a per-family roll-up, both sorted by
+    coverage descending.
+    """
+    styles = [
+        StyleStat(family, weight, style, stretch, int(chars), coverage)
+        for (family, weight, style, stretch), (chars, coverage) in acc.items()
+    ]
+    styles.sort(key=lambda s: s.coverage, reverse=True)
+
     family_acc: dict[str, FamilyStat] = defaultdict(lambda: FamilyStat(family=""))
-    for (family, weight, style, stretch), (chars, coverage) in acc.items():
-        st = StyleStat(family, weight, style, stretch, int(chars), coverage)
-        fam = family_acc[family]
-        fam.family = family
+    for st in styles:
+        fam = family_acc[st.family]
+        fam.family = st.family
         fam.chars += st.chars
         fam.coverage += st.coverage
-        fam.styles.append(st)
-
     families = sorted(family_acc.values(), key=lambda f: f.coverage, reverse=True)
-    for fam in families:
-        fam.styles.sort(key=lambda s: s.coverage, reverse=True)
 
     return UrlReport(
         url=url,
+        styles=styles,
         families=families,
         total_chars=sum(f.chars for f in families),
         total_coverage=sum(f.coverage for f in families),
@@ -58,10 +64,9 @@ def merge_reports(reports: Iterable[UrlReport], url: str = "ALL URLS") -> UrlRep
     for rep in reports:
         if rep.error:
             continue
-        for fam in rep.families:
-            for st in fam.styles:
-                key = (st.family, st.weight, st.style, st.stretch)
-                cur = acc.setdefault(key, [0, 0.0])
-                cur[0] += st.chars
-                cur[1] += st.coverage
+        for st in rep.styles:
+            key = (st.family, st.weight, st.style, st.stretch)
+            cur = acc.setdefault(key, [0, 0.0])
+            cur[0] += st.chars
+            cur[1] += st.coverage
     return _assemble(url, acc)

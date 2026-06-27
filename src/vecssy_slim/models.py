@@ -7,6 +7,15 @@ from dataclasses import dataclass, field
 from typing import NamedTuple
 
 
+def style_label(style: str) -> str:
+    """Compact `font-style` label for reports: 'n' (normal) or 'i' (italic).
+
+    Oblique is folded into italic; anything unrecognized reads as normal.
+    """
+    s = (style or "").strip().lower()
+    return "i" if s.startswith(("italic", "oblique")) else "n"
+
+
 class FontRecord(NamedTuple):
     """One stretch of text rendered by a single resolved font on a page.
 
@@ -43,7 +52,7 @@ class StyleStat:
         return {
             "family": self.family,
             "weight": self.weight,
-            "style": self.style,
+            "style": style_label(self.style),
             "stretch": self.stretch,
             "chars": self.chars,
             "coverage": round(self.coverage, 2),
@@ -52,37 +61,43 @@ class StyleStat:
 
 @dataclass
 class FamilyStat:
-    """Coverage aggregated per family, with its per-style breakdown."""
+    """Coverage aggregated per family (its styles summed)."""
 
     family: str
     chars: int = 0
     coverage: float = 0.0
-    styles: list[StyleStat] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
             "family": self.family,
             "chars": self.chars,
             "coverage": round(self.coverage, 2),
-            "styles": [s.to_dict() for s in self.styles],
         }
 
 
 @dataclass
 class UrlReport:
-    """Font-coverage report for a single URL (or an aggregate of URLs)."""
+    """Font-coverage report for a single URL (or an aggregate of URLs).
+
+    `styles` and `families` are both sorted by coverage descending. Per-URL
+    reports surface `styles`; the site-wide aggregate surfaces both.
+    """
 
     url: str
+    styles: list[StyleStat] = field(default_factory=list)
     families: list[FamilyStat] = field(default_factory=list)
     total_chars: int = 0
     total_coverage: float = 0.0
     error: str | None = None
 
-    def to_dict(self) -> dict:
-        return {
+    def to_dict(self, include_families: bool = False) -> dict:
+        d = {
             "url": self.url,
             "error": self.error,
             "total_chars": self.total_chars,
             "total_coverage": round(self.total_coverage, 2),
-            "families": [f.to_dict() for f in self.families],
+            "styles": [s.to_dict() for s in self.styles],
         }
+        if include_families:
+            d["families"] = [f.to_dict() for f in self.families]
+        return d
