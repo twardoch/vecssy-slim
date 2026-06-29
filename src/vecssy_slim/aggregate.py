@@ -10,15 +10,16 @@ used for a few large headings can outrank one used for a lot of fine print.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Iterable
+from collections.abc import Iterable
 
 from vecssy_slim.models import FamilyStat, FontRecord, StyleStat, UrlReport
 
 # (family, weight, style, stretch) -> accumulated [chars, coverage]
 _StyleKey = tuple[str, str, str, str]
+_Acc = list[int | float]
 
 
-def _assemble(url: str, acc: dict[_StyleKey, list]) -> UrlReport:
+def _assemble(url: str, acc: dict[_StyleKey, _Acc]) -> UrlReport:
     """Turn a {style_key: [chars, coverage]} accumulator into a sorted report.
 
     Produces a flat `styles` list and a per-family roll-up, both sorted by
@@ -49,7 +50,7 @@ def _assemble(url: str, acc: dict[_StyleKey, list]) -> UrlReport:
 
 def build_url_report(url: str, records: Iterable[FontRecord]) -> UrlReport:
     """Fold raw font records into a report sorted by coverage (descending)."""
-    acc: dict[_StyleKey, list] = {}
+    acc: dict[_StyleKey, _Acc] = {}
     for rec in records:
         key = (rec.family, rec.weight, rec.style, rec.stretch)
         cur = acc.setdefault(key, [0, 0.0])
@@ -60,7 +61,7 @@ def build_url_report(url: str, records: Iterable[FontRecord]) -> UrlReport:
 
 def merge_reports(reports: Iterable[UrlReport], url: str = "ALL URLS") -> UrlReport:
     """Combine several per-URL reports into one site-wide aggregate."""
-    acc: dict[_StyleKey, list] = {}
+    acc: dict[_StyleKey, _Acc] = {}
     for rep in reports:
         if rep.error:
             continue

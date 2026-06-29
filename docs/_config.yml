@@ -1,0 +1,7 @@
+title: vecssy-slim
+description: >-
+  Crawl URLs and rank fonts by how much they are actually rendered,
+  to slim down @font-face stacks.
+theme: minima
+plugins:
+  - jekyll-seo-tag

@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from vecssy_slim.models import UrlReport, style_label
 
 
-def build_payload(per_url: list[UrlReport], aggregate: UrlReport) -> dict:
+def build_payload(per_url: list[UrlReport], aggregate: UrlReport) -> dict[str, Any]:
     """Assemble the full result document (used for the JSON report).
 
     Per-URL reports carry their `styles`; the aggregate also carries `families`.

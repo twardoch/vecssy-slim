@@ -126,3 +126,7 @@ The aggregation and reporting logic is pure and fully unit-tested without a brow
 ## License
 
 MIT
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.

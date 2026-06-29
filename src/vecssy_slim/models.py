@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 
 def style_label(style: str) -> str:
@@ -48,7 +48,7 @@ class StyleStat:
     chars: int = 0
     coverage: float = 0.0
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "family": self.family,
             "weight": self.weight,
@@ -67,7 +67,7 @@ class FamilyStat:
     chars: int = 0
     coverage: float = 0.0
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "family": self.family,
             "chars": self.chars,
@@ -90,7 +90,7 @@ class UrlReport:
     total_coverage: float = 0.0
     error: str | None = None
 
-    def to_dict(self, include_families: bool = False) -> dict:
+    def to_dict(self, include_families: bool = False) -> dict[str, Any]:
         d = {
             "url": self.url,
             "error": self.error,
