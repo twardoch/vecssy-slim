@@ -23,7 +23,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install deps
-        run: uv pip install -e ".[test]" --system
+        run: uv pip install -e ".[test]"  # setup-uv activates a venv for python-version
 
       - name: Lint (ruff)
         run: uvx ruff check src/ tests/
