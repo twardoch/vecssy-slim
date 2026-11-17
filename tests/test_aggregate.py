@@ -20,8 +20,8 @@ def test_coverage_is_chars_times_size():
 def test_build_url_report_aggregates_per_style_and_family():
     records = [
         FontRecord("Inter", 16.0, "400", "normal", "100%", 10),  # 160
-        FontRecord("Inter", 16.0, "400", "normal", "100%", 5),   # 80  -> same style group
-        FontRecord("Inter", 32.0, "700", "normal", "100%", 4),   # 128 -> bold style group
+        FontRecord("Inter", 16.0, "400", "normal", "100%", 5),  # 80  -> same style group
+        FontRecord("Inter", 32.0, "700", "normal", "100%", 4),  # 128 -> bold style group
     ]
     report = build_url_report("http://x", records)
 
@@ -41,8 +41,8 @@ def test_build_url_report_aggregates_per_style_and_family():
 
 def test_families_sorted_by_coverage_descending():
     records = [
-        FontRecord("Small", 10.0, "400", "normal", "100%", 100),   # 1000
-        FontRecord("Huge", 90.0, "400", "normal", "100%", 50),     # 4500
+        FontRecord("Small", 10.0, "400", "normal", "100%", 100),  # 1000
+        FontRecord("Huge", 90.0, "400", "normal", "100%", 50),  # 4500
     ]
     report = build_url_report("http://x", records)
     assert [f.family for f in report.families] == ["Huge", "Small"]

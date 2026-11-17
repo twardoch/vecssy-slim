@@ -122,7 +122,9 @@ def _record_text_node(
             records.append(FontRecord(family, size, weight, style, stretch, glyphs))
 
 
-def _computed_style(client: Any, element_id: Any, cache: _StyleCache) -> tuple[float, str, str, str]:
+def _computed_style(
+    client: Any, element_id: Any, cache: _StyleCache
+) -> tuple[float, str, str, str]:
     if element_id in cache:
         return cache[element_id]
     resp = client.send("CSS.getComputedStyleForNode", {"nodeId": element_id})
